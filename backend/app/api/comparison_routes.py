@@ -1,0 +1,25 @@
+import json
+from pathlib import Path
+
+from fastapi import APIRouter, HTTPException
+
+from app.agents.comparison_agent import RepositoryComparisonAgent
+from app.api.discovery_routes import resolve_root
+from app.core.config import get_settings
+from app.models.comparison import CompareRequest, ComparisonResult
+
+router = APIRouter(prefix="/comparison", tags=["comparison"])
+
+
+@router.post("", response_model=ComparisonResult, response_model_by_alias=True)
+def compare_repositories(body: CompareRequest):
+    base_root, enh_root = resolve_root(body.base), resolve_root(body.enhancement)
+    try:
+        result = RepositoryComparisonAgent().run(base_root, enh_root)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"Comparison failed: {exc}")
+    out_dir = Path(get_settings().reports_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    name = f"comparison-{result.baseApplication}-vs-{result.enhancementApplication}.json"
+    (out_dir / name).write_text(json.dumps(result.model_dump(by_alias=True), indent=2), encoding="utf-8")
+    return result

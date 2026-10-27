@@ -1,0 +1,4 @@
+- Project: Application Onboarding Agent (React + TS + MUI + React Router frontend; FastAPI backend).
+- Backend layers: api -> services -> agents/analyzers -> models. Config in app/core.
+- Frontend: Vite, src/pages, components, services, diagrams.
+- Keep README.md current.
